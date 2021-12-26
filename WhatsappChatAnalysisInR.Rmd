@@ -1,0 +1,80 @@
+---
+title: "WhatsAppChatAnalysisInR"
+author: "18F-0114_Muhammad Zain Ul Abidin"
+date: "12/27/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r WhatsApp Chat Analysis}
+library(stringr)
+library(ggplot2)
+library("rwhatsapp")
+library("dplyr")
+library("lubridate")
+library("tidyr")
+library("tidytext")
+library("stopwords")
+
+```
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+chat <- rwa_read("MyChat.txt") %>% 
+  filter(!is.na(author)) 
+
+chat %>%
+  mutate(day = date(time)) %>%
+  count(day) %>%
+  ggplot(aes(x = day, y = n)) +
+  geom_bar(stat = "identity") +
+  ylab("") + xlab("") +
+  ggtitle("Messages per day")
+
+```
+
+```{r}
+chat %>%
+  mutate(day = date(time)) %>%
+  count(author) %>%
+  ggplot(aes(x = reorder(author, n), y = n)) +
+  geom_bar(stat = "identity") +
+  ylab("") + xlab("") +
+  coord_flip() +
+  ggtitle("Number of messages")
+  
+```
+
+```{r}
+chat %>%
+  unnest_tokens(input = text,
+                output = word) %>%
+  count(author, word, sort = TRUE) %>%
+  group_by(author) %>%
+  top_n(n = 4, n) %>%
+  ggplot(aes(x = reorder_within(word, n, author), y = n, fill = author)) +
+  geom_col(show.legend = FALSE) +
+  ylab("") +
+  xlab("") +
+  coord_flip() +
+  facet_wrap(~author, ncol = 2, scales = "free_y") +
+  scale_x_reordered() +
+  ggtitle("Most often used words")
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
